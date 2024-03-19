@@ -1343,6 +1343,7 @@ int minidbg_run(pminidbg_context ctx)
                 log_event(re);
                 _add_thread_unit(ctx,_event.dwProcessId,_event.dwThreadId);
                 _thread_event(ctx,_event.dwProcessId,_event.dwThreadId,_event.u.CreateProcessInfo.lpStartAddress);
+                CloseHandle(_event.u.CreateProcessInfo.hFile);
                 break;
             case EXIT_THREAD_DEBUG_EVENT:
                 _remove_thread_unit(ctx,_event.dwProcessId,_event.dwThreadId);
@@ -1364,6 +1365,7 @@ int minidbg_run(pminidbg_context ctx)
                     if(0 == _strnicmp(_ptr_,"\\\\?\\",4))_ptr_=_ptr_+4;
                     _add_process_module(ctx,_event.dwProcessId,_event.dwThreadId,_ptr_,_event.u.LoadDll.lpBaseOfDll);
                 }
+                CloseHandle(_event.u.LoadDll.hFile);
                 break;
             case UNLOAD_DLL_DEBUG_EVENT:
                 _snprintf_s(re,sizeof(re),_TRUNCATE,"0x%p",_event.u.UnloadDll.lpBaseOfDll);
