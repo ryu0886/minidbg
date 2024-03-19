@@ -2,6 +2,7 @@
 #include <string.h>
 #include <windows.h>
 #include <winternl.h>
+#include <process.h>
 #include <exception>
 #include <iostream>
 #include "library/libwin/ds.h"
@@ -604,6 +605,111 @@ int _test_seh_cpp(int argc, _TCHAR* argv[])
 }
 #pragma optimize( "g", on )
 
+typedef struct _stress_context
+{
+    unsigned thread_id;
+    unsigned long count;
+}stress_context;
+
+unsigned WINAPI _stress_task(void* context)
+{
+    unsigned long i=0;
+    stress_context* pCtx = (stress_context*)context;
+    char szName[512];
+    memset(szName,0,sizeof(szName));
+    
+    if(pCtx)
+    {
+        _snprintf_s(szName,_TRUNCATE,"%d.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.txt",pCtx->thread_id);
+        printf("writing %s\n",szName);
+
+        try
+        {
+            while(i<pCtx->count)
+            {
+                HANDLE hFile = CreateFileA(szName,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+                if(INVALID_HANDLE_VALUE != hFile)
+                {
+                    CloseHandle(hFile);
+                    printf("try:%s:%d\r",szName,i);
+                    i++;
+                }
+                Sleep(1);
+            }
+        }
+        catch(...)
+        {
+            while(i<pCtx->count)
+            {
+                HANDLE hFile = CreateFileA(szName,GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+                if(INVALID_HANDLE_VALUE != hFile)
+                {
+                    CloseHandle(hFile);
+                    printf("catch:%s:%d\r",szName,i);
+                    i++;
+                }
+                Sleep(1);
+            }
+        }
+        
+        printf("writing %s..done..%d..%d\n",szName,i,pCtx->count);
+        DeleteFileA(szName);
+    }
+    return 0;
+}
+
+
+
+int _test_stress(int argc, _TCHAR* argv[])
+{
+    int thread_count = 1;
+    if(argc>0) thread_count=_ttoi(argv[0]);
+    if(argc>1) g_seh_count=_ttoi(argv[1]);
+
+    printf("start.\n");
+
+    if(thread_count)
+    {
+        HANDLE* pThreads = new HANDLE[thread_count];
+        if(pThreads)
+        {
+            memset(pThreads,0,sizeof(HANDLE)*thread_count);
+            stress_context* pContexts = new stress_context[thread_count];
+            if(pContexts)
+            {
+                memset(pContexts,0,sizeof(stress_context)*thread_count);
+                for(int i=0;i<thread_count;i++)
+                {
+                    pContexts[i].count = g_seh_count;
+                    pThreads[i] = (HANDLE)_beginthreadex(NULL,0,_stress_task,&pContexts[i],CREATE_SUSPENDED,&pContexts[i].thread_id);
+                }
+                
+                for(int i=0;i<thread_count;i++)
+                {
+                    ResumeThread(pThreads[i]);
+                }
+                
+                WaitForMultipleObjects(thread_count,pThreads,TRUE,INFINITE);
+                
+                for(int i=0;i<thread_count;i++)
+                {
+                    CloseHandle(pThreads[i]);
+                }
+                
+                delete [] pContexts;
+            }
+            delete [] pThreads;
+        }
+    }
+
+
+
+
+    printf("done.\n");
+    
+    return 0;
+}
+
 int unittest(int argc, _TCHAR* argv[])
 {
     if(argc>=3)
@@ -659,6 +765,11 @@ int unittest(int argc, _TCHAR* argv[])
             //need /EHa but BP is not support
             printf("_test_seh_cpp...\n");
             _test_seh_cpp(argc-3,&argv[3]);
+        }
+        else if(0 == _tcscmp(argv[2],_T("stress")))
+        {
+            printf("_test_stress...\n");
+            _test_stress(argc-3,&argv[3]);
         }
         else
         {
