@@ -713,9 +713,9 @@ void _handle_flag(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
 
 void _handle_pre_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
 {
-    HANDLE hThread = OpenThread(THREAD_GET_CONTEXT|THREAD_SET_CONTEXT,FALSE,tid);
+    HANDLE _h_ = GET_THREAD_CONTEXT(ctx,tid).h;
     if(gOption & OPTION_DEBUG) printf("[_handle_pre_hook]%s!%s=%p>\n",phook->mod_ref->mod_full_path,phook->ref->api_name,phook->api_begin);
-    if(hThread)
+    if(_h_)
     {
 #ifdef _WIN64
         if(phook->mod_ref->machine_type == IMAGE_FILE_MACHINE_I386)
@@ -723,7 +723,7 @@ void _handle_pre_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook
             WOW64_CONTEXT _context;
             memset(&_context,0,sizeof(_context));
             _context.ContextFlags = CONTEXT_FULL;
-            Wow64GetThreadContext(hThread,&_context);
+            Wow64GetThreadContext(_h_,&_context);
 #pragma warning( push )
 #pragma warning( disable : 4312 )
             _handle_pre_reg(ctx,pid,tid,phook,(void*)_context.Eax,(void*)_context.Ebx,(void*)_context.Ecx,(void*)_context.Edx,(void*)_context.Ebp,(void*)_context.Esp,0,0,0,0);
@@ -734,7 +734,7 @@ void _handle_pre_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook
             _context.EFlags|=0x100;
             _context.Eip = _context.Eip-1;
             _restore_pre_hook(ctx,pid,phook);
-            Wow64SetThreadContext(hThread, &_context);
+            Wow64SetThreadContext(_h_, &_context);
             phook->preflag = HOOK_PRE_FLAG_TRAP;
             phook->tid = tid;
             phook->wow64_context = _context;
@@ -745,7 +745,7 @@ void _handle_pre_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook
             CONTEXT _context;
             memset(&_context,0,sizeof(_context));
             _context.ContextFlags = CONTEXT_FULL;
-            GetThreadContext(hThread, &_context);
+            GetThreadContext(_h_, &_context);
 #ifdef _WIN64
             _handle_pre_reg(ctx,pid,tid,phook,(void*)_context.Rax,(void*)_context.Rbx,(void*)_context.Rcx,(void*)_context.Rdx,(void*)_context.Rbp,(void*)_context.Rsp,(void*)_context.R8,(void*)_context.R9,(void*)_context.R10,(void*)_context.R11);
 #else
@@ -766,13 +766,12 @@ void _handle_pre_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook
             _context.Eip = _context.Eip-1;
 #endif
             _restore_pre_hook(ctx,pid,phook);
-            SetThreadContext(hThread, &_context);
+            SetThreadContext(_h_, &_context);
             phook->preflag = HOOK_PRE_FLAG_TRAP;
             phook->tid = tid;
             phook->context = _context;
         }
 
-        CloseHandle(hThread);
     }
 }
 
@@ -780,9 +779,9 @@ void _handle_pre_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook
 
 void _handle_post_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
 {
-    HANDLE hThread = OpenThread(THREAD_GET_CONTEXT|THREAD_SET_CONTEXT,FALSE,tid);
+    HANDLE _h_ = GET_THREAD_CONTEXT(ctx,tid).h;
     if(gOption & OPTION_DEBUG) printf("[_handle_hook]%s!%s=%p>\n",phook->mod_ref->mod_full_path,phook->ref->api_name,phook->api_begin);
-    if(hThread)
+    if(_h_)
     {
 #ifdef _WIN64
         if(phook->mod_ref->machine_type == IMAGE_FILE_MACHINE_I386)
@@ -790,12 +789,12 @@ void _handle_post_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phoo
             WOW64_CONTEXT _context;
             memset(&_context,0,sizeof(_context));
             _context.ContextFlags = CONTEXT_FULL;
-            Wow64GetThreadContext(hThread,&_context);
+            Wow64GetThreadContext(_h_,&_context);
 #pragma warning( push )
 #pragma warning( disable : 4312 )
             _handle_post_reg(ctx,pid,tid,phook,(void*)_context.Eax,(void*)_context.Ebx,(void*)_context.Ecx,(void*)_context.Edx,(void*)_context.Ebp,(void*)_context.Esp,0,0,0,0);
 #pragma warning( pop )
-            Wow64SetThreadContext(hThread, &_context);
+            Wow64SetThreadContext(_h_, &_context);
         }
         else
 #endif
@@ -803,24 +802,23 @@ void _handle_post_hook(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phoo
             CONTEXT _context;
             memset(&_context,0,sizeof(_context));
             _context.ContextFlags = CONTEXT_FULL;
-            GetThreadContext(hThread, &_context);
+            GetThreadContext(_h_, &_context);
 #ifdef _WIN64
             _handle_post_reg(ctx,pid,tid,phook,(void*)_context.Rax,(void*)_context.Rbx,(void*)_context.Rcx,(void*)_context.Rdx,(void*)_context.Rbp,(void*)_context.Rsp,(void*)_context.R8,(void*)_context.R9,(void*)_context.R10,(void*)_context.R11);
 #else
             _handle_post_reg(ctx,pid,tid,phook,(void*)_context.Eax,(void*)_context.Ebx,(void*)_context.Ecx,(void*)_context.Edx,(void*)_context.Ebp,(void*)_context.Esp,0,0,0,0);
 #endif
             
-            SetThreadContext(hThread, &_context);
+            SetThreadContext(_h_, &_context);
         }
 
-        CloseHandle(hThread);
     }
 }
 
-void _handle_rerun(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
+void _handle_re_run(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
 {
-    HANDLE hThread = OpenThread(THREAD_GET_CONTEXT|THREAD_SET_CONTEXT,FALSE,tid);
-    if(hThread)
+    HANDLE _h_ = GET_THREAD_CONTEXT(ctx,tid).h;
+    if(_h_)
     {
 #ifdef _WIN64
         if(phook->mod_ref->machine_type == IMAGE_FILE_MACHINE_I386)
@@ -828,11 +826,12 @@ void _handle_rerun(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
             WOW64_CONTEXT _context;
             memset(&_context,0,sizeof(_context));
             _context.ContextFlags = CONTEXT_FULL;
-            Wow64GetThreadContext(hThread,&_context);
+            Wow64GetThreadContext(_h_,&_context);
 
             _context.Eip = _context.Eip-1;
             
-            Wow64SetThreadContext(hThread, &_context);
+            Wow64SetThreadContext(_h_, &_context);
+            phook->wow64_context = _context;
         }
         else
 #endif
@@ -840,18 +839,17 @@ void _handle_rerun(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
             CONTEXT _context;
             memset(&_context,0,sizeof(_context));
             _context.ContextFlags = CONTEXT_FULL;
-            GetThreadContext(hThread, &_context);
+            GetThreadContext(_h_, &_context);
 #ifdef _WIN64
             _context.Rip = _context.Rip-1;
 #else
             _context.Eip = _context.Eip-1;
 #endif
 
-            SetThreadContext(hThread, &_context);
+            SetThreadContext(_h_, &_context);
+            phook->context = _context;
         }
 
-
-        CloseHandle(hThread);
     }
 }
 
@@ -982,7 +980,15 @@ int _handle_breakpoint(pminidbg_context ctx, DWORD pid, DWORD tid, EXCEPTION_DEB
                     }
                     else if(phook->preflag == HOOK_PRE_FLAG_TRAP)
                     {
-                        _handle_rerun(ctx, pid, tid, phook);
+                        _handle_re_run(ctx, pid, tid, phook);
+                        if(tid == phook->tid)
+                        {
+                            //
+                        }
+                        else
+                        {
+
+                        }
                     }
                     else //API_FLAG_ASM_SKIP such as CC
                     {
