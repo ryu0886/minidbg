@@ -831,7 +831,7 @@ void _handle_re_run(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
             _context.Eip = _context.Eip-1;
             
             Wow64SetThreadContext(_h_, &_context);
-            phook->wow64_context = _context;
+
         }
         else
 #endif
@@ -847,7 +847,7 @@ void _handle_re_run(pminidbg_context ctx, DWORD pid, DWORD tid, hook_ds* phook)
 #endif
 
             SetThreadContext(_h_, &_context);
-            phook->context = _context;
+
         }
 
     }
@@ -980,7 +980,9 @@ int _handle_breakpoint(pminidbg_context ctx, DWORD pid, DWORD tid, EXCEPTION_DEB
                     }
                     else if(phook->preflag == HOOK_PRE_FLAG_TRAP)
                     {
+                        //reverse the instruction CC
                         _handle_re_run(ctx, pid, tid, phook);
+
                         if(tid == phook->tid)
                         {
                             //
