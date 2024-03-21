@@ -51,7 +51,7 @@ Open "cmd.exe" and call "SetupBuildEnv.cmd"
 ```
 call D:\BuildEnv\SetupBuildEnv.cmd
 ```
-Then you've set up the build environment then go to repository
+Then you've done the build environment setup and then the next step is to change to the repository directory and run "msbuild."
 ```
 msbuild /p:platform=x64 /p:configuration=release main/minidbg.vcxproj
 msbuild /p:platform=x86 /p:configuration=release main/minidbg.vcxproj
