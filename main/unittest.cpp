@@ -7,6 +7,7 @@
 #include <iostream>
 #include "library/libwin/ds.h"
 #include "minternl.h"
+#include "version.h"
 
 char * ch2hex(char *szOut, size_t outlen, const char* input, size_t in_len)
 {
@@ -714,7 +715,8 @@ int unittest(int argc, _TCHAR* argv[])
 {
     if(argc>=3)
     {
-        printf("unittest...");
+        printf("######################### [ %s ] #########################\n",V_VERSION);
+        printf("unittest ...");
         if(0 == _tcscmp(argv[2],_T("ch2hex")))
         {
             printf("_test_ch2hex...\n");
