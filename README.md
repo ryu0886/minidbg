@@ -2,7 +2,7 @@
 
 ## Design
 The tool is leveraging [Windows Debug API](https://learn.microsoft.com/en-us/windows/win32/api/debugapi/) to implement a debugger to install breakpoint on interesting APIs and get API events.
-The basic flow is
+The main logic is inside [_handle_exception](https://github.com/ryu0886/minidbg/blob/main/main/minidbg.cpp#L1088)
 ```
 //...
     {
