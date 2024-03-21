@@ -8,6 +8,8 @@ name: MSBuild
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '**.cpp'
   pull_request:
     branches: [ "main" ]
 
