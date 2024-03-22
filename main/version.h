@@ -7,7 +7,7 @@
 #define VERSION_MAJOR     0
 #define VERSION_MINOR     9
 #define VERSION_REVISION  3
-#define VERSION_BUILD     13215
+#define VERSION_BUILD     13221
 #define V_VERSION   STR(VERSION_MAJOR) "." STR(VERSION_MINOR) "." STR(VERSION_REVISION) "." STR(VERSION_BUILD)
 #define V_PRODUCT   "Cloud Scanner"
 #define V_APPNAME   "winapp"

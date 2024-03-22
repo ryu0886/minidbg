@@ -180,6 +180,9 @@
       <AdditionalLibraryDirectories>..\$(Configuration)\</AdditionalLibraryDirectories>
       <AdditionalOptions>sub.lib common.lib disasm.lib libmod.lib libpe.lib libstring.lib libwin.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);_NO_PACK_</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
